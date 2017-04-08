@@ -28,7 +28,7 @@ Be sure to create a user using Cloud Storage Server `manage.php` and add the /fe
 
 Next, you'll need to initialize the user account's /feeds extension.  To do this, use the PHP SDK to run a script like:
 
-````
+````php
 <?php
 	require_once "sdk/support/sdk_cloud_storage_server_feeds.php";
 
@@ -59,7 +59,7 @@ Sending notifications that do nothing is not all that useful.  Let's say you hav
 
 Example monitoring script:
 
-````
+````php
 <?php
 	require_once "sdk/support/sdk_cloud_storage_server_feeds.php";
 
