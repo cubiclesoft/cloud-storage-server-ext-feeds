@@ -74,98 +74,101 @@
 					}
 					else
 					{
-						// Process filters.
-						$match = true;
-						foreach ($info["filters"] as $filter)
+						foreach ($info as $api_sequence => $filters)
 						{
-							// Locate path element.
-							$found = true;
-							$curr = &$result["data"];
-							foreach ($filter["path"] as $key)
+							// Process filters.
+							$match = true;
+							foreach ($filters as $filter)
 							{
-								if (!isset($curr[$key]))
+								// Locate path element.
+								$found = true;
+								$curr = &$result["data"];
+								foreach ($filter["path"] as $key)
 								{
-									$found = false;
+									if (!isset($curr[$key]))
+									{
+										$found = false;
+
+										break;
+									}
+
+									$curr = &$curr[$key];
+								}
+
+								// If the path wasn't found, it may still be a match depending on 'cmp' and 'not' values.
+								if (!$found && ($filter["cmp"] !== false || !$filter["not"]))
+								{
+									$match = false;
 
 									break;
 								}
 
-								$curr = &$curr[$key];
-							}
-
-							// If the path wasn't found, it may still be a match depending on 'cmp' and 'not' values.
-							if (!$found && ($filter["cmp"] !== false || !$filter["not"]))
-							{
-								$match = false;
-
-								break;
-							}
-
-							$found = false;
-							if ($filter["cmp"] !== false)
-							{
-								$currval = $curr;
-
-								if (!is_array($currval))  $currval = array($currval);
-								foreach ($currval as $key => $val)
+								$found = false;
+								if ($filter["cmp"] !== false)
 								{
-									foreach ($filter["values"] as $cmpval)
+									$currval = $curr;
+
+									if (!is_array($currval))  $currval = array($currval);
+									foreach ($currval as $key => $val)
 									{
-										if ($filter["cmp"] === "key" || $filter["cmp"] === "both")
+										foreach ($filter["values"] as $cmpval)
 										{
-											$val2 = $key;
-
-											switch ($filter["mode"])
+											if ($filter["cmp"] === "key" || $filter["cmp"] === "both")
 											{
-												case "==":  if (!is_array($val2) && !is_object($val2) && $val2 == $cmpval)  $found = true;  break;
-												case "===":  if (!is_array($val2) && !is_object($val2) && $val2 === $cmpval)  $found = true;  break;
-												case "regex":  if (is_string($val2) && preg_match($cmpval, $val2))  $found = true;  break;
-												case "<":  if (is_numeric($val2) && $val2 < $cmpval)  $found = true;  break;
-												case "<=":  if (is_numeric($val2) && $val2 <= $cmpval)  $found = true;  break;
-												case ">":  if (is_numeric($val2) && $val2 > $cmpval)  $found = true;  break;
-												case ">=":  if (is_numeric($val2) && $val2 >= $cmpval)  $found = true;  break;
+												$val2 = $key;
+
+												switch ($filter["mode"])
+												{
+													case "==":  if (!is_array($val2) && !is_object($val2) && $val2 == $cmpval)  $found = true;  break;
+													case "===":  if (!is_array($val2) && !is_object($val2) && $val2 === $cmpval)  $found = true;  break;
+													case "regex":  if (is_string($val2) && preg_match($cmpval, $val2))  $found = true;  break;
+													case "<":  if (is_numeric($val2) && $val2 < $cmpval)  $found = true;  break;
+													case "<=":  if (is_numeric($val2) && $val2 <= $cmpval)  $found = true;  break;
+													case ">":  if (is_numeric($val2) && $val2 > $cmpval)  $found = true;  break;
+													case ">=":  if (is_numeric($val2) && $val2 >= $cmpval)  $found = true;  break;
+												}
 											}
-										}
 
-										if (!$found && ($filter["cmp"] === "value" || $filter["cmp"] === "both"))
-										{
-											$val2 = $val;
-											if ($filter["serialize"] && (is_array($val2) || is_object($val2)))  $val2 = json_encode($val2);
-
-											switch ($filter["mode"])
+											if (!$found && ($filter["cmp"] === "value" || $filter["cmp"] === "both"))
 											{
-												case "==":  if (!is_array($val2) && !is_object($val2) && $val2 == $cmpval)  $found = true;  break;
-												case "===":  if (!is_array($val2) && !is_object($val2) && $val2 === $cmpval)  $found = true;  break;
-												case "regex":  if (!is_array($val2) && !is_object($val2) && preg_match($cmpval, (string)$val2))  $found = true;  break;
-												case "<":  if (is_numeric($val2) && $val2 < $cmpval)  $found = true;  break;
-												case "<=":  if (is_numeric($val2) && $val2 <= $cmpval)  $found = true;  break;
-												case ">":  if (is_numeric($val2) && $val2 > $cmpval)  $found = true;  break;
-												case ">=":  if (is_numeric($val2) && $val2 >= $cmpval)  $found = true;  break;
+												$val2 = $val;
+												if ($filter["serialize"] && (is_array($val2) || is_object($val2)))  $val2 = json_encode($val2);
+
+												switch ($filter["mode"])
+												{
+													case "==":  if (!is_array($val2) && !is_object($val2) && $val2 == $cmpval)  $found = true;  break;
+													case "===":  if (!is_array($val2) && !is_object($val2) && $val2 === $cmpval)  $found = true;  break;
+													case "regex":  if (!is_array($val2) && !is_object($val2) && preg_match($cmpval, (string)$val2))  $found = true;  break;
+													case "<":  if (is_numeric($val2) && $val2 < $cmpval)  $found = true;  break;
+													case "<=":  if (is_numeric($val2) && $val2 <= $cmpval)  $found = true;  break;
+													case ">":  if (is_numeric($val2) && $val2 > $cmpval)  $found = true;  break;
+													case ">=":  if (is_numeric($val2) && $val2 >= $cmpval)  $found = true;  break;
+												}
 											}
+
+											if ($found)  break;
 										}
 
 										if ($found)  break;
 									}
+								}
 
-									if ($found)  break;
+								if ($filter["not"])  $found = !$found;
+
+								if (!$found)
+								{
+									$match = false;
+
+									break;
 								}
 							}
 
-							if ($filter["not"])  $found = !$found;
-
-							if (!$found)
+							if ($match)
 							{
-								$match = false;
+								$result["api_sequence"] = $api_sequence;
 
-								break;
+								$client->websocket->Write(json_encode($result), WebSocket::FRAMETYPE_TEXT);
 							}
-						}
-
-						if ($match)
-						{
-							$result["api_sequence"] = $info["api_sequence"];
-
-							$client->websocket->Write(json_encode($result), WebSocket::FRAMETYPE_TEXT);
 						}
 					}
 				}
@@ -388,8 +391,9 @@
 
 				if (!isset($this->monitors[$uid]))  $this->monitors[$uid] = array();
 				if (!isset($this->monitors[$uid][$name]))  $this->monitors[$uid][$name] = array();
+				if (!isset($this->monitors[$uid][$name][$client->id]))  $this->monitors[$uid][$name][$client->id] = array();
 
-				$this->monitors[$uid][$name][$client->id] = array("api_sequence" => $data["api_sequence"], "filters" => $filters);
+				$this->monitors[$uid][$name][$client->id][$data["api_sequence"]] = $filters;
 
 				return array("success" => true, "name" => $name, "enabled" => true);
 			}
