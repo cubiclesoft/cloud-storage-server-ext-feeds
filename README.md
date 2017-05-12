@@ -72,7 +72,7 @@ Example 'exectab.txt' file:
 
 The above defines several script names:  `test`, `test2`, and `test3`.  Each one does something different.  The format for script execution lines is:
 
-`[options] scriptname [executable [params]]`
+`[options] feedname [executable [params]]`
 
 The full list of options for scripts is:
 
