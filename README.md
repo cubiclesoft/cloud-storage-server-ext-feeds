@@ -10,7 +10,7 @@ Features
 
 * Cross-platform support for all major platforms, including Windows.
 * Send insert, update, and delete notifications just like a real database.
-* Timestamp notifications to put them into the future, now, or in the past.
+* Timestamp each notification to schedule it for the future, now, or in the past.
 * An optional future pre-loader can make sure future data is delivered in a system resource-conscious fashion.
 * RESTful notification and live WebSocket monitoring support.
 * Also has a liberal open source license.  MIT or LGPL, your choice.
@@ -215,9 +215,9 @@ Example class (named 'blogs.php'):
 			}
 		}
 
-		public function SentItems($ts)
+		public function SentItems(&$items, $ts)
 		{
-			if ($ts >= $this->lastts)  $this->canadd = true;
+			if ($ts >= $this->lastts || !isset($items[$this->lastts]))  $this->canadd = true;
 		}
 	}
 ?>
