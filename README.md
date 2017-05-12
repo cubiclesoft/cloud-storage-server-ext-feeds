@@ -55,9 +55,6 @@ The above will send a notification to the feed with the name of "blog" five seco
 External Scripts
 ----------------
 
-The exectab.txt File Format
----------------------------
-
 Locate the Cloud Storage Server storage directory as specified by the configuration.  Within it are user ID directories.  Within a user ID directory is a set of other directories associated with each enabled and used extension.  Find the newly set up user account and the /feeds directory.  Within the /feeds directory is a file called 'exectab.txt'.  The 'exectab.txt' file is very similar to crontab except it only executes associated scripts when there is something to process for a given notification type.
 
 Example 'exectab.txt' file:
