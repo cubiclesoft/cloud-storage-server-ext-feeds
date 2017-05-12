@@ -74,13 +74,15 @@ The above defines several script names:  `test`, `test2`, and `test3`.  Each one
 
 `[options] feedname [executable [params]]`
 
-The full list of options for scripts is:
+The full list of options is:
 
 * -d=startdir - The starting directory for the target process.
 * -e=envvar - An environment variable to set for the target process.
 * -f=filter - A JSON encoded string containing a filter (see Monitoring for filter options).
 * -g=group - The *NIX group to run the process under (*NIX only).
 * -u=user - The *NIX user to run the process under (*NIX only).
+
+Executables are run such that their last option is a JSON encoded string containing the data to process.
 
 Monitoring
 ----------
