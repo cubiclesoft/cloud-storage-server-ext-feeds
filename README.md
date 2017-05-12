@@ -52,6 +52,39 @@ Next, you'll need to initialize the user account's /feeds extension.  To do this
 
 The above will send a notification to the feed with the name of "blog" five seconds in the future.  If there were any monitors watching, they would receive the notification at that time.  At this point, the installation is complete.
 
+External Scripts
+----------------
+
+The exectab.txt File Format
+---------------------------
+
+Locate the Cloud Storage Server storage directory as specified by the configuration.  Within it are user ID directories.  Within a user ID directory is a set of other directories associated with each enabled and used extension.  Find the newly set up user account and the /feeds directory.  Within the /feeds directory is a file called 'exectab.txt'.  The 'exectab.txt' file is very similar to crontab except it only executes associated scripts when there is something to process for a given notification type.
+
+Example 'exectab.txt' file:
+
+````
+# Run a PHP script as a specific user and group.
+-u=someuser -g=somegroup test /usr/bin/php /var/scripts/myscript.php
+
+# Run a PHP script as the same user/group as the Cloud Storage Server process (probably root) with a starting directory of /var/log/apache2.
+-d=/var/log/apache2 test2 /usr/bin/php /var/scripts/myscript2.php
+
+# Runs a PHP script as the same user/group as the Cloud Storage Server process (probably root) but only if the incoming data matches a filter.
+-f='{"path": "/keywords", "cmp": "value", "values": ["cubiclesoft"]}' test3 /usr/bin/php /var/scripts/myscript3.php
+````
+
+The above defines several script names:  `test`, `test2`, and `test3`.  Each one does something different.  The format for script execution lines is:
+
+`[options] scriptname [executable [params]]`
+
+The full list of options for scripts is:
+
+* -d=startdir - The starting directory for the target process.
+* -e=envvar - An environment variable to set for the target process.
+* -f=filter - A JSON encoded string containing a filter (see Monitoring for filter options).
+* -g=group - The *NIX group to run the process under (*NIX only).
+* -u=user - The *NIX user to run the process under (*NIX only).
+
 Monitoring
 ----------
 
