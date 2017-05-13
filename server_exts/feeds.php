@@ -141,7 +141,7 @@
 				// Load optional custom handler to prefill future notification items.
 				$this->futurefillers[$name] = false;
 				$name2 = preg_replace('/\s+/', "_", preg_replace('/[^A-Za-z0-9_\-]/', " ", $name));
-				$filename = $rootpath . "/user_init/feeds/" . $name2 . ".php";
+				$filename = $rootpath . "/user_init/feeds/future_" . $name2 . ".php";
 				if (file_exists($filename))
 				{
 					require_once $filename;

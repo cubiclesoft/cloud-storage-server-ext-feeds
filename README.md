@@ -202,7 +202,7 @@ There are various ways to get the monitoring script to start.  If you want to st
 Pre-Fill Future Notifications
 -----------------------------
 
-When Cloud Storage Server first starts up, /feeds has no knowledge about future notifications that may take place.  In addition, there could be thousands or even millions of future notifications.  Putting all of that data in RAM will slow things down considerably.  When a monitor first registers itself at /feeds/v1/monitor with a new 'name' (e.g. blogs), the /feeds extension looks for a PHP file in the 'user_init/feeds' directory of the main server that matches a file system safe version of the name.  It loads up the file, instantiates a class named 'CSS_Extension_feeds__feedname' (where 'feedname' is the name of the file), and runs the class' Init() method.
+When Cloud Storage Server first starts up, /feeds has no knowledge about future notifications that may take place.  In addition, there could be thousands or even millions of future notifications.  Putting all of that data in RAM will slow things down considerably.  When a monitor first registers itself at /feeds/v1/monitor with a new 'name' (e.g. blogs), the /feeds extension looks for a PHP file in the 'user_init/feeds' directory of the main server that matches a file system safe version of the name.  It loads up the file, instantiates a class named 'CSS_Extension_feeds__feedname' (where 'future_[feedname].php' is the name of the file), and runs the class' Init() method.
 
 Once the class is initialized, the AddItems() method will be called at first and then periodically called later on with an array of timestamps that map to arrays of information that will be sent at those times.  The array may be modified.
 
