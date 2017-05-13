@@ -2,11 +2,6 @@
 	// Cloud Storage Server feeds SDK class.
 	// (C) 2017 CubicleSoft.  All Rights Reserved.
 
-	// Load dependencies.
-	if (!class_exists("HTTP", false))  require_once str_replace("\\", "/", dirname(__FILE__)) . "/http.php";
-	if (!class_exists("WebBrowser", false))  require_once str_replace("\\", "/", dirname(__FILE__)) . "/web_browser.php";
-	if (!class_exists("WebSocket", false))  require_once str_replace("\\", "/", dirname(__FILE__)) . "/websocket.php";
-
 	// This class only supports the /feeds API.
 	class CloudStorageServerFeeds
 	{
@@ -14,6 +9,8 @@
 
 		public function __construct()
 		{
+			if (!class_exists("WebBrowser", false))  require_once str_replace("\\", "/", dirname(__FILE__)) . "/web_browser.php";
+
 			$this->web = new WebBrowser();
 			$this->fp = false;
 			$this->host = false;
@@ -226,6 +223,8 @@
 				"peer_cert_callback_opts" => "",
 				"sslopts" => self::InitSSLOpts(array("cafile" => $this->cafile, "verify_peer" => true))
 			);
+
+			if (!class_exists("WebSocket", false))  require_once str_replace("\\", "/", dirname(__FILE__)) . "/websocket.php";
 
 			$ws = new WebSocket();
 
