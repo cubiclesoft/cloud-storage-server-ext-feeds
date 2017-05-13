@@ -269,7 +269,11 @@ Example class (named 'blogs.php'):
 
 		public function SentItems(&$items, $ts)
 		{
-			if ($ts >= $this->lastts || !isset($items[$this->lastts]))  $this->canadd = true;
+			if ($ts >= $this->lastts || !isset($items[$this->lastts]))
+			{
+				$this->lastts = $ts;
+				$this->canadd = true;
+			}
 		}
 	}
 ?>
