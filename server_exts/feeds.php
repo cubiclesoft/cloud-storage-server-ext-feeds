@@ -27,6 +27,8 @@
 
 		public function InitServer()
 		{
+			global $db;
+
 			$this->futureitems = array();
 			$this->futurefillers = array();
 			$this->monitors = array();
@@ -53,6 +55,28 @@
 			$this->exectabsts = array();
 			$this->usercache = array();
 			$this->groupcache = array();
+
+			// Walk all users and preload future fill items for any user's exectab.
+			$result = $db->Query("SELECT", array(
+				"*",
+				"FROM" => "?",
+				"WHERE" => "serverexts LIKE '%feeds%'",
+			), "users");
+
+			while ($userrow = $result->NextRow())
+			{
+				$userrow->serverexts = @json_decode($userrow->serverexts, true);
+
+				if (isset($userrow->serverexts["feeds"]))
+				{
+					$userrow->basepath = str_replace("\\", "/", $userrow->basepath);
+					while (substr($userrow->basepath, -1) === "/")  $userrow->basepath = substr($userrow->basepath, 0, -1);
+
+					$basedir = self::InitUserFeedsBasePath($userrow);
+
+					$this->InitExecTabs($basedir, $userrow->id);
+				}
+			}
 		}
 
 		private function GetUserInfoByName($name)
@@ -127,8 +151,6 @@
 					{
 						$this->futurefillers[$name] = new $classname;
 						$this->futurefillers[$name]->Init();
-
-						$this->FutureFillItems($uid, $name);
 					}
 				}
 			}
@@ -464,29 +486,27 @@
 			return $basedir;
 		}
 
-		public function ProcessAPI($reqmethod, $pathparts, $client, $userrow, $guestrow, $data)
+		private function InitExecTabs($basedir, $uid)
 		{
 			global $rootpath, $userhelper;
-
-			$basedir = self::InitUserFeedsBasePath($userrow);
 
 			// Copy staging file into directory.
 			$filename = $basedir . "/exectab.txt";
 			if (!file_exists($filename))
 			{
 				$bytesdiff = 0;
-				if (!file_exists($rootpath . "/user_init/scripts/exectab.txt"))  $data2 = "";
-				else  $data2 = file_get_contents($rootpath . "/user_init/scripts/exectab.txt");
+				if (!file_exists($rootpath . "/user_init/feeds/exectab.txt"))  $data2 = "";
+				else  $data2 = file_get_contents($rootpath . "/user_init/feeds/exectab.txt");
 				$bytesdiff = strlen($data2);
 				file_put_contents($filename, $data2);
 
 				// Adjust total bytes stored.
-				$userhelper->AdjustUserTotalBytes($userrow->id, $bytesdiff);
+				$userhelper->AdjustUserTotalBytes($uid, $bytesdiff);
 			}
 
 			// Parse 'exectab.txt' if it has changed since the last API call.
-			if (!isset($this->exectabsts[$userrow->id]))  $this->exectabsts[$userrow->id] = 0;
-			if ($this->exectabsts[$userrow->id] < filemtime($filename) && filemtime($filename) < time())
+			if (!isset($this->exectabsts[$uid]))  $this->exectabsts[$uid] = 0;
+			if ($this->exectabsts[$uid] < filemtime($filename) && filemtime($filename) < time())
 			{
 				require_once $rootpath . "/support/cli.php";
 
@@ -508,7 +528,7 @@
 					"allow_opts_after_param" => false
 				);
 
-				$this->exectabs[$userrow->id] = array();
+				$this->exectabs[$uid] = array();
 				$fp = fopen($filename, "rb");
 				while (($line = fgets($fp)) !== false)
 				{
@@ -535,19 +555,29 @@
 							{
 								$args["opts"]["filter"] = $result["filters"];
 
-								if (!isset($this->exectabs[$userrow->id][$name]))  $this->exectabs[$userrow->id][$name] = array();
+								if (!isset($this->exectabs[$uid][$name]))  $this->exectabs[$uid][$name] = array();
 
-								$this->exectabs[$userrow->id][$name][] = $args;
+								$this->exectabs[$uid][$name][] = $args;
 
 								$this->InitFutureFiller($name);
+								$this->FutureFillItems($uid, $name);
 							}
 						}
 					}
 				}
 				fclose($fp);
 
-				$this->exectabsts[$userrow->id] = filemtime($filename);
+				$this->exectabsts[$uid] = filemtime($filename);
 			}
+		}
+
+		public function ProcessAPI($reqmethod, $pathparts, $client, $userrow, $guestrow, $data)
+		{
+			global $rootpath, $userhelper;
+
+			$basedir = self::InitUserFeedsBasePath($userrow);
+
+			$this->InitExecTabs($basedir, $userrow->id);
 
 			// Main API.
 			$y = count($pathparts);
@@ -631,6 +661,7 @@
 				$this->monitors[$uid][$name][$client->id][$data["api_sequence"]] = $result["filters"];
 
 				$this->InitFutureFiller($name);
+				$this->FutureFillItems($uid, $name);
 
 				return array("success" => true, "name" => $name, "enabled" => true);
 			}

@@ -82,7 +82,7 @@ The full list of options is:
 * -g=group - The *NIX group to run the process under (*NIX only).
 * -u=user - The *NIX user to run the process under (*NIX only).
 
-Executables are run such that their last option is a JSON encoded string containing the data to process.
+Executables are run such that their last argument is a JSON encoded string containing the data to process.
 
 Monitoring
 ----------
