@@ -208,7 +208,7 @@ Once the class is initialized, the AddItems() method will be called at first and
 
 The SentItems() method can be used to unblock internal functionality so that a later AddItems() call can add more future notification items.
 
-Example class (named 'blogs.php'):
+Example class (named 'future_blogs.php'):
 
 ````php
 <?php
