@@ -229,17 +229,37 @@ Example class (named 'blogs.php'):
 		{
 			if ($this->canadd)
 			{
-				$minpub = $this->db->GetOne("SELECT MIN(published) FROM myblog WHERE published > ?", array(date("Y-m-d H:i:s", $this->lastts)));
-				if ($minpub)
+				$prevts = $this->lastts;
+
+				$nextpub = $this->db->GetOne("SELECT MIN(published) FROM myblog WHERE published > ?", array(date("Y-m-d H:i:s", $prevts)));
+				if ($nextpub)
 				{
-					$this->lastts = strtotime($minpub);
+					$this->lastts = strtotime($nextpub);
 
 					if (!isset($items[$this->lastts]))  $items[$this->lastts] = array();
 
-					$result = $this->db->Query("SELECT * FROM myblog WHERE published = ?", array($minpub));
+					$result = $this->db->Query("SELECT * FROM myblog WHERE published = ?", array($nextpub));
 					while ($row = $result->NextRow())
 					{
 						$items[$this->lastts][$row->id] = array("type" => "insert", "data" => (array)$row);
+					}
+				}
+
+				$nextremove = $this->db->GetOne("SELECT MIN(removeafter) FROM myblog WHERE removeafter > ?", array(date("Y-m-d H:i:s", $prevts)));
+				if ($nextremove)
+				{
+					$ts = strtotime($nextremove);
+					if ($ts <= $this->lastts)
+					{
+						$this->lastts = $ts;
+
+						if (!isset($items[$this->lastts]))  $items[$this->lastts] = array();
+
+						$result = $this->db->Query("SELECT * FROM myblog WHERE removeafter = ?", array($nextremove));
+						while ($row = $result->NextRow())
+						{
+							$items[$this->lastts][$row->id] = array("type" => "delete", "data" => (array)$row);
+						}
 					}
 				}
 
