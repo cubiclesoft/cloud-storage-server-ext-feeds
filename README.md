@@ -214,34 +214,35 @@ Example class (named 'future_blogs.php'):
 <?php
 	class CSS_Extension_feeds__blogs
 	{
-		private $db, $lastts, $canadd;
+		private $db;
 
 		public function Init()
 		{
 			require_once "/path/to/db.php";
 
 			$this->db = new DB("username", "password");
-			$this->lastts = time();
-			$this->canadd = true;
 		}
 
-		public function AddItems(&$items)
+		public function AddItems(&$itemsinfo)
 		{
-			if ($this->canadd)
+			if (!isset($itemsinfo["lastts"]))  $itemsinfo["lastts"] = time();
+			if (!isset($itemsinfo["canadd"]))  $itemsinfo["canadd"] = true;
+
+			if ($itemsinfo["canadd"])
 			{
-				$prevts = $this->lastts;
+				$prevts = $itemsinfo["lastts"];
 
 				$nextpub = $this->db->GetOne("SELECT MIN(published) FROM myblog WHERE published > ?", array(date("Y-m-d H:i:s", $prevts)));
 				if ($nextpub)
 				{
-					$this->lastts = strtotime($nextpub);
+					$itemsinfo["lastts"] = strtotime($nextpub);
 
-					if (!isset($items[$this->lastts]))  $items[$this->lastts] = array();
+					if (!isset($itemsinfo["items"][$itemsinfo["lastts"]]))  $itemsinfo["items"][$itemsinfo["lastts"]] = array();
 
 					$result = $this->db->Query("SELECT * FROM myblog WHERE published = ?", array($nextpub));
 					while ($row = $result->NextRow())
 					{
-						$items[$this->lastts][$row->id] = array("type" => "insert", "data" => (array)$row);
+						$itemsinfo["items"][$itemsinfo["lastts"]][$row->id] = array("type" => "insert", "data" => (array)$row);
 					}
 				}
 
@@ -249,30 +250,30 @@ Example class (named 'future_blogs.php'):
 				if ($nextremove)
 				{
 					$ts = strtotime($nextremove);
-					if ($ts <= $this->lastts)
+					if ($ts <= $itemsinfo["lastts"])
 					{
-						$this->lastts = $ts;
+						$itemsinfo["lastts"] = $ts;
 
-						if (!isset($items[$this->lastts]))  $items[$this->lastts] = array();
+						if (!isset($itemsinfo["items"][$itemsinfo["lastts"]]))  $itemsinfo["items"][$itemsinfo["lastts"]] = array();
 
 						$result = $this->db->Query("SELECT * FROM myblog WHERE removeafter = ?", array($nextremove));
 						while ($row = $result->NextRow())
 						{
-							$items[$this->lastts][$row->id] = array("type" => "delete", "data" => (array)$row);
+							$itemsinfo["items"][$itemsinfo["lastts"]][$row->id] = array("type" => "delete", "data" => (array)$row);
 						}
 					}
 				}
 
-				$this->canadd = false;
+				$itemsinfo["canadd"] = false;
 			}
 		}
 
-		public function SentItems(&$items, $ts)
+		public function RemovedItems(&$itemsinfo, $ts, $sent)
 		{
-			if ($ts >= $this->lastts || !isset($items[$this->lastts]))
+			if (!$itemsinfo["canadd"] && $ts === $itemsinfo["lastts"])
 			{
-				$this->lastts = $ts;
-				$this->canadd = true;
+				if (!$sent)  $itemsinfo["lastts"]--;
+				$itemsinfo["canadd"] = true;
 			}
 		}
 	}

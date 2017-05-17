@@ -120,11 +120,11 @@
 			if (!isset($this->futurefillers[$name]) || $this->futurefillers[$name] === false)  return;
 
 			if (!isset($this->futureitems[$uid]))  $this->futureitems[$uid] = array();
-			if (!isset($this->futureitems[$uid][$name]))  $this->futureitems[$uid][$name] = array();
+			if (!isset($this->futureitems[$uid][$name]))  $this->futureitems[$uid][$name] = array("items" => array());
 			$this->futurefillers[$name]->AddItems($this->futureitems[$uid][$name]);
-			ksort($this->futureitems[$uid][$name]);
+			ksort($this->futureitems[$uid][$name]["items"]);
 
-			if (!count($this->futureitems[$uid][$name]))
+			if (!count($this->futureitems[$uid][$name]["items"]))
 			{
 				unset($this->futureitems[$uid][$name]);
 
@@ -193,7 +193,7 @@
 				{
 					foreach ($filter["values"] as $num2 => $value)
 					{
-						if (!is_string($value) || @preg_match($value, NULL) === false)  return array("success" => false, "error" => "Filter " . $num . " 'values' " . $num2 . " is an invalid regular expression.", "errorcode" => "invalid_filter_values_regex");
+						if (!is_string($value) || @preg_match($value, NULL) === false)  return array("success" => false, "error" => "Filter " . $num . " 'values' " . $num2 . " (" . htmlspecialchars($value) . ") is an invalid regular expression.", "errorcode" => "invalid_filter_values_regex");
 					}
 				}
 				else if ($filter["mode"] === "==" || $filter["mode"] === "===")
@@ -407,7 +407,9 @@
 //echo $cmd . "\n";
 
 						// Start the process.
-						$procpipes = array(array("pipe", "r"), array("pipe", "w"), array("pipe", "w"));
+						$os = php_uname("s");
+						$windows = (strtoupper(substr($os, 0, 3)) == "WIN");
+						$procpipes = array(array("pipe", "r"), array("file", ($windows ? "NUL" : "/dev/null"), "w"), array("file", ($windows ? "NUL" : "/dev/null"), "w"));
 						$proc = @proc_open($cmd, $procpipes, $pipes, (isset($args["opts"]["dir"]) ? $args["opts"]["dir"] : NULL), $env, array("suppress_errors" => true, "bypass_shell" => true));
 
 						// Restore effective user and group.
@@ -420,8 +422,7 @@
 						if (!is_resource($proc))  echo "Failed to start process:  " . $cmd . "\n";
 						else
 						{
-							foreach ($pipes as $fp)  fclose($fp);
-
+							fclose($pipes[0]);
 							proc_close($proc);
 						}
 					}
@@ -435,9 +436,9 @@
 			$result = false;
 			foreach ($this->futureitems as $uid => $names)
 			{
-				foreach ($names as $name => $tsinfo)
+				foreach ($names as $name => $itemsinfo)
 				{
-					foreach ($tsinfo as $ts2 => $idsinfo)
+					foreach ($itemsinfo["items"] as $ts2 => $idsinfo)
 					{
 						if ($ts < $ts2)
 						{
@@ -455,9 +456,9 @@
 							$this->RunScripts($uid, $name, $info);
 						}
 
-						if (isset($this->futurefillers[$name]))  $this->futurefillers[$name]->SentItems($this->futureitems[$uid][$name], $ts2);
+						unset($this->futureitems[$uid][$name]["items"][$ts2]);
 
-						unset($this->futureitems[$uid][$name][$ts2]);
+						if (isset($this->futurefillers[$name]))  $this->futurefillers[$name]->RemovedItems($this->futureitems[$uid][$name], $ts2, true);
 					}
 
 					$this->FutureFillItems($uid, $name);
@@ -604,32 +605,39 @@
 				$uid = $userrow->id;
 				$name = $data["name"];
 				if (!isset($this->futureitems[$uid]))  $this->futureitems[$uid] = array();
-				if (!isset($this->futureitems[$uid][$name]))  $this->futureitems[$uid][$name] = array();
-				if (!isset($this->futureitems[$uid][$name][$data["queue"]]))
+				if (!isset($this->futureitems[$uid][$name]))  $this->futureitems[$uid][$name] = array("items" => array());
+				if (!isset($this->futureitems[$uid][$name]["items"][$data["queue"]]))
 				{
-					$this->futureitems[$uid][$name][$data["queue"]] = array();
-					ksort($this->futureitems[$uid][$name]);
+					$this->futureitems[$uid][$name]["items"][$data["queue"]] = array();
+					ksort($this->futureitems[$uid][$name]["items"]);
 				}
 
 				// Delete any matching IDs that occur after the delete time.
 				if ($data["type"] === "delete")
 				{
-					foreach ($this->futureitems[$uid][$name] as $ts => $idmap)
+					foreach ($this->futureitems[$uid][$name]["items"] as $ts => $idmap)
 					{
 						if ($ts > $data["queue"])  unset($this->futureitems[$uid][$name][$ts][$data["id"]]);
 					}
 				}
 
-				$this->futureitems[$uid][$name][$data["queue"]][$data["id"]] = array("type" => $data["type"], "data" => $data["data"]);
+				$this->futureitems[$uid][$name]["items"][$data["queue"]][$data["id"]] = array("type" => $data["type"], "data" => $data["data"]);
 
 				// Process scheduled items.
 				$this->ProcessFutureItems();
 
 				// Reduce the future queue size to the max allowed.
-				if ($data["queuesize"] > -1 && isset($this->futureitems[$uid]) && isset($this->futureitems[$uid][$name]) && count($this->futureitems[$uid][$name]) > $data["queuesize"])
+				if ($data["queuesize"] > -1 && isset($this->futureitems[$uid]) && isset($this->futureitems[$uid][$name]) && count($this->futureitems[$uid][$name]["items"]) > $data["queuesize"])
 				{
-					$keys = array_reverse(array_keys($this->futureitems[$uid][$name]));
-					while (count($this->futureitems[$uid][$name]) > $data["queuesize"])  unset($this->futureitems[$uid][$name][array_shift($keys)]);
+					$keys = array_reverse(array_keys($this->futureitems[$uid][$name]["items"]));
+					while (count($this->futureitems[$uid][$name]["items"]) > $data["queuesize"])
+					{
+						$ts = array_shift($keys);
+
+						unset($this->futureitems[$uid][$name]["items"][$ts]);
+
+						if (isset($this->futurefillers[$name]))  $this->futurefillers[$name]->RemovedItems($this->futureitems[$uid][$name], $ts, false);
+					}
 
 					$this->FutureFillItems($uid, $name);
 				}
