@@ -8,9 +8,11 @@
 
 		public function Install()
 		{
-			global $rootpath;
+			global $rootpath, $config;
 
 			@mkdir($rootpath . "/user_init/feeds", 0770, true);
+			@chmod($rootpath . "/user_init/feeds", 02770);
+			if ($config["serviceuser"] !== "")  @chown($rootpath . "/user_init/feeds", $config["serviceuser"]);
 		}
 
 		public function AddUserExtension($userrow)
