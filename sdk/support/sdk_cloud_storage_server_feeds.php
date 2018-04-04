@@ -56,7 +56,7 @@
 					"sslopts" => self::InitSSLOpts(array("verify_peer" => false, "capture_peer_cert_chain" => true))
 				);
 
-				$result = $this->web->Process($this->host . "/", "auto", $options);
+				$result = $this->web->Process($this->host . "/", $options);
 
 				if (!$result["success"])
 				{
@@ -229,7 +229,7 @@
 			$ws = new WebSocket();
 
 			$url = str_replace(array("https://", "http://"), array("wss://", "ws://"), $this->host);
-			$result = $ws->Connect($url . "/feeds", $this->host, "auto", $options);
+			$result = $ws->Connect($url . "/feeds", $this->host, $options);
 			if (!$result["success"])  return $result;
 
 			$result["ws"] = $ws;
@@ -276,7 +276,7 @@
 				$options2 = array_merge($options2, $options);
 			}
 
-			$result = $this->web->Process($this->host . "/feeds/v1/" . $apipath, "auto", $options2);
+			$result = $this->web->Process($this->host . "/feeds/v1/" . $apipath, $options2);
 
 			if (!$result["success"] && $this->fp !== false)
 			{
