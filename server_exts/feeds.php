@@ -1,6 +1,6 @@
 <?php
 	// Cloud Storage Server feeds extension.
-	// (C) 2017 CubicleSoft.  All Rights Reserved.
+	// (C) 2018 CubicleSoft.  All Rights Reserved.
 
 	class CSS_Extension_feeds
 	{
@@ -17,8 +17,9 @@
 
 		public function AddUserExtension($userrow)
 		{
-			echo "[Feeds Ext] Allow guest creation/deletion (Y/N):  ";
-			$guests = (substr(strtoupper(trim(fgets(STDIN))), 0, 1) == "Y");
+			global $args, $suppressoutput;
+
+			$guests = CLI::GetYesNoUserInputWithArgs($args, "ext_guest", "[Feeds Ext] Allow guest creation/deletion", "Y", "", $suppressoutput);
 
 			return array("success" => true, "info" => array("guests" => $guests));
 		}
