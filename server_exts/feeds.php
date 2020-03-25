@@ -538,7 +538,7 @@
 				{
 					$line = trim($line);
 
-					if ($line !== "" && $line{0} !== "#" && substr($line, 0, 2) !== "//")
+					if ($line !== "" && $line[0] !== "#" && substr($line, 0, 2) !== "//")
 					{
 						$args = CLI::ParseCommandLine($cmdopts, ". " . $line);
 
