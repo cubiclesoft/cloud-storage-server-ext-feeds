@@ -5,6 +5,8 @@ A powerful and flexible cross-platform /feeds extension for the [self-hosted clo
 
 The /feeds extension is useful for triggering notifications of current and upcoming database/information changes.  Powerful filtering options allow for only sending notifications that monitoring applications are interested in.  The use-cases are endless for achieving near real-time application data responsiveness even inside environments with obnoxious data caches.
 
+NOTE:  This extension is considered largely obsolete in favor of [xcron](https://github.com/cubiclesoft/xcron), which can do most of the same things but far more elegantly and with a richer feature set.
+
 [![Donate](https://cubiclesoft.com/res/donate-shield.png)](https://cubiclesoft.com/donate/) [![Discord](https://img.shields.io/discord/777282089980526602?label=chat&logo=discord)](https://cubiclesoft.com/product-support/github/)
 
 Features
